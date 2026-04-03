@@ -82,9 +82,6 @@ set -euo pipefail
 echo "▸ Creating required directories"
 mkdir -vp /var/roothome /data /var/home
 
-echo "▸ Upgrading all packages to latest versions"
-dnf5 -y upgrade --refresh
-
 echo "▸ Installing kernel-modules-extra for broader hardware support"
 dnf5 -y install kernel-modules-extra --refresh
 
@@ -202,7 +199,16 @@ make install DESTDIR=/
 cd /
 rm -rf /tmp/weather-oclock
 
-rm -rf /tmp/weather-oclock
+# ── Install mbpfan v2.4.0 from source (missing in Fedora 44 repos) ──
+echo "▸ Installing mbpfan v2.4.0 from source"
+git clone --depth 1 --branch v2.4.0 https://github.com/linux-on-mac/mbpfan.git /tmp/mbpfan
+cd /tmp/mbpfan
+make
+make install
+# Ensure service file is in the correct systemd directory
+cp -v mbpfan.service /usr/lib/systemd/system/mbpfan.service
+cd /
+rm -rf /tmp/mbpfan
 
 echo "▸ Configuring systemd services"
 systemctl mask systemd-remount-fs.service

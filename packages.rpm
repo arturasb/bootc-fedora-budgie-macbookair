@@ -22,11 +22,10 @@ compsize
 # ── System utilities ───────────────────────────────────────────────
 auditctl
 git
-intel-media-driver
+libva-intel-media-driver
 libnma
 libva-utils
 lm_sensors
-mbpfan
 micro
 podman
 powertop
@@ -41,5 +40,6 @@ ibus-typing-booster
 
 # ── Container / shell / build tools ────────────────────────────────
 fish
+gcc
 make
 toolbox
