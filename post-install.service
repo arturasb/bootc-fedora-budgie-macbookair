@@ -1,0 +1,14 @@
+# Systemd user service — runs on first graphical login to bootstrap Flatpaks.
+# Enabled globally via: systemctl --global enable post-install.service
+
+[Unit]
+Description=Bootstrap user-level Flatpak applications on first login
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+ExecStart=/usr/bin/post-install.sh
+
+[Install]
+WantedBy=default.target

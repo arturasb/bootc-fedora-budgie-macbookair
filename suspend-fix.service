@@ -1,0 +1,14 @@
+# Fix for MacBook suspend/wakeup issue.
+# Prevents spurious wakeups triggered by XHC1 (USB) and LID0 (lid sensor)
+# ACPI events, which are common on Intel MacBooks running Linux.
+# Ref: https://github.com/rlatosky/mbp-ublue
+
+[Unit]
+Description=Fix for MacBook suspend wakeup issue
+
+[Service]
+Type=oneshot
+ExecStart=/bin/sh -c "echo XHC1 > /proc/acpi/wakeup && echo LID0 > /proc/acpi/wakeup"
+
+[Install]
+WantedBy=multi-user.target
