@@ -202,7 +202,7 @@ echo "▸ Configuring systemd services"
 systemctl mask systemd-remount-fs.service
 systemctl enable zram-swap.service
 systemctl enable macbook-lighter.service
-systemctl enable macfanctld.service
+systemctl enable mbpfan.service
 
 echo "▸ Final cleanup"
 rm -rvf packages.rpm

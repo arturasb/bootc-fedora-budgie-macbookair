@@ -22,11 +22,11 @@ compsize
 # ── System utilities ───────────────────────────────────────────────
 auditctl
 git
-intel-media-driver
+intel-media-driver-free
 libnma
 libva-utils
 lm_sensors
-macfanctld
+mbpfan
 micro
 podman
 powertop
