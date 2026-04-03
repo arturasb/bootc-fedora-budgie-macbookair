@@ -100,8 +100,24 @@ bootc status
 # Rollback to previous version
 sudo bootc rollback
 
-# Switch to this image (first time)
+# Switch to this image (if already on bootc)
 sudo bootc switch ghcr.io/CleoMenezesJr/bootc-fedora-gnome-macbookair:latest
+```
+
+## Rebasing from Fedora Atomic (Silverblue/Kinoite)
+
+If you are already running an `rpm-ostree` based system like Fedora Silverblue or Kinoite, you can transition directly to this image.
+
+First, ensure you have no local layered packages overlapping, by clearing local modifications (Run only if needed on the first time):
+```bash
+sudo rpm-ostree reset
+systemctl reboot
+```
+
+Then, execute the rebase command directly from the container registry:
+```bash
+sudo rpm-ostree rebase ostree-unverified-registry:ghcr.io/cleomenezesjr/bootc-fedora-gnome-macbookair:latest
+systemctl reboot
 ```
 
 ## Credits
