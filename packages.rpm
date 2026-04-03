@@ -22,7 +22,7 @@ compsize
 # ── System utilities ───────────────────────────────────────────────
 auditctl
 git
-intel-media-driver-free
+intel-media-driver
 libnma
 libva-utils
 lm_sensors

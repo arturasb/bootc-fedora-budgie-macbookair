@@ -175,7 +175,10 @@ RUN <<PACKAGES
 set -euo pipefail
 
 echo "▸ Installing RPM packages from packages.rpm"
-grep -v '^\s*#' packages.rpm | grep -v '^\s*$' | xargs dnf5 install -y
+dnf5 -y install \
+    "https://mirrors.rpmfusion.org/free/fedora/rpmfusion-free-release-$(rpm -E %fedora).noarch.rpm" \
+    "https://mirrors.rpmfusion.org/nonfree/fedora/rpmfusion-nonfree-release-$(rpm -E %fedora).noarch.rpm"
+grep -v '^\s*#' packages.rpm | grep -v '^\s*$' | xargs dnf5 install -y --refresh
 
 # ── Install macbook-lighter (ambient light sensor control) ──
 echo "▸ Installing macbook-lighter from source"
@@ -197,6 +200,8 @@ cd /tmp/weather-oclock
 # Build and install system-wide (/usr/share/gnome-shell/extensions)
 make install DESTDIR=/
 cd /
+rm -rf /tmp/weather-oclock
+
 rm -rf /tmp/weather-oclock
 
 echo "▸ Configuring systemd services"
