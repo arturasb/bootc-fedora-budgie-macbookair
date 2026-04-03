@@ -129,14 +129,16 @@ ln -sf /usr/share/zoneinfo/America/Santiago /etc/localtime
 echo "▸ Installing MacBook keyboard configuration (hid_apple)"
 mv -v hid-apple.conf /etc/modprobe.d/hid-apple.conf
 
-# ── Systemd services: user-level Flatpak bootstrap ──
+# ── Systemd user service: user-level Flatpak bootstrap ──
 echo "▸ Installing post-install script and user service"
 mv -v post-install.sh /usr/bin/post-install.sh
 chmod +x /usr/bin/post-install.sh
-# User service goes to /usr/lib/systemd/user/ (not /etc/)
-mkdir -p /usr/lib/systemd/user/
+
+# Flatpaks are requested as --user, so this logic MUST trigger inside a user session.
+# Modifying this to system/ would run it as root during boot and break Flatpaks.
 mv -v post-install.service /usr/lib/systemd/user/post-install.service
-# Enable globally for all users
+
+# Enable globally for all users executing a graphical session
 systemctl --global enable post-install.service
 
 # ── MacBook-specific systemd services ──
