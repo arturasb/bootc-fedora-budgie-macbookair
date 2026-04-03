@@ -14,7 +14,10 @@ Immutable Fedora 44 image with GNOME Shell, tailored for MacBook Air hardware. A
 | **Camera** | FaceTimeHD via [mulderje/facetimehd-kmod](https://copr.fedorainfracloud.org/coprs/mulderje/facetimehd-kmod/) COPR + [firmware](https://github.com/patjak/facetimehd-firmware) |
 | **Filesystem** | Btrfs with subvolumes (root, var, home) |
 | **Timezone** | America/Santiago (Chile) |
+| **Fan Control** | `mbpfan` (official Fedora package) |
+| **Video Accel** | `intel-media-driver-free` (VA-API) |
 | **Flatpaks** | User-level (`--user`) via first-login bootstrap |
+| **Extension** | [Weather O'Clock](https://github.com/CleoMenezesJr/weather-oclock) (built from source) |
 
 ## File Structure
 
@@ -37,7 +40,9 @@ Immutable Fedora 44 image with GNOME Shell, tailored for MacBook Air hardware. A
 - **FaceTimeHD Camera**: Kernel module + firmware baked into the image.
 - **Keyboard**: `hid_apple` configured with `fnmode=2` (F-keys default) and `iso_layout=0` (ANSI).
 - **Suspend Fix**: Disables XHC1/LID0 ACPI wakeup to prevent spurious wake from sleep.
-- **Battery**: PowerTOP auto-tune runs on every boot.
+- **Battery**: PowerTOP auto-tune and `intel-media-driver-free` for hardware video decoding.
+- **Thermals**: `mbpfan` enabled with a custom fan curve for better heat management.
+- **Kernel**: `acpi_osi` arguments for improved ACPI/Power management compatibility.
 - **Ambient Light**: [macbook-lighter](https://github.com/harttle/macbook-lighter) for automatic screen/keyboard backlight.
 
 ## Flatpak Applications (user-level)
@@ -101,7 +106,7 @@ bootc status
 sudo bootc rollback
 
 # Switch to this image (if already on bootc)
-sudo bootc switch ghcr.io/CleoMenezesJr/bootc-fedora-gnome-macbookair:latest
+sudo bootc switch ghcr.io/cleomenezesjr/bootc-fedora-gnome-macbookair:latest
 ```
 
 ## Rebasing from Fedora Atomic (Silverblue/Kinoite)
