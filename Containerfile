@@ -159,14 +159,6 @@ rm -rfv /var/cache/* \
         /var/tmp/*
 SYSCONFIG
 
-# ── Install GNOME Shell (minimal, no weak deps) ──
-RUN echo "▸ Installing GNOME Shell (minimal)" && \
-    dnf5 install gnome-shell --setopt=install_weak_deps=False -y && \
-    dnf5 clean all && \
-    rm -rfv /var/cache/* \
-            /var/log/* \
-            /var/tmp/*
-
 # ── Install RPM packages from list & configure services ──
 RUN <<PACKAGES
 set -euo pipefail
