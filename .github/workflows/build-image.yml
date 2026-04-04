@@ -1,14 +1,14 @@
 name: Build and Push Bootc Image
 
 on:
-  schedule:
+  #schedule:
     # Daily at 02:00 UTC (22:00 Chile time)
-    - cron: '0 2 * * *'
-  push:
-    branches:
-      - main
-    paths-ignore:
-      - 'README.md'
+  #  - cron: '0 2 * * *'
+  #push:
+  #  branches:
+  #    - main
+  #  paths-ignore:
+  #    - 'README.md'
   workflow_dispatch:
 
 env:
