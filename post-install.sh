@@ -17,7 +17,7 @@ flatpak remote-add --user --if-not-exists \
 sleep 2
 
 echo "Installing Flatpak applications (user-level)…"
-flatpak install --user --noninteractive flathub \
+flatpak install --user --noninteractive --assumeyes --or-update flathub \
     com.github.tchx84.Flatseal \
     com.mattjakeman.ExtensionManager \
     dev.geopjr.Tuba \
