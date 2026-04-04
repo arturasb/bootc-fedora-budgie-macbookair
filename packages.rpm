@@ -17,6 +17,10 @@ flatpak
 xdg-utils
 glibc-all-langpacks
 ptyxis
+adwaita-icon-theme
+gnome-icon-theme
+gnome-icon-theme-legacy
+hicolor-icon-theme
 
 # ── File thumbnailers ──────────────────────────────────────────────
 evince-thumbnailer
