@@ -18,7 +18,6 @@ gnome-epub-thumbnailer
 # ── System utilities ───────────────────────────────────────────────
 auditctl
 git
-#libva-intel-media-driver
 libva-intel-driver
 ffmpeg
 libnma
@@ -44,4 +43,3 @@ make
 distrobox
 mc
 btop
-
