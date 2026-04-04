@@ -1,5 +1,6 @@
 # ── Desktop essentials ──────────────────────────────────────────────
 flatpak
+glibc-all-langpacks
 # ── File thumbnailers ──────────────────────────────────────────────
 evince-thumbnailer
 ffmpegthumbnailer
