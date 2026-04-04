@@ -7,7 +7,7 @@
 # ── Stage 1: Build out-of-tree kernel modules ──────────────────────────────
 # Build Broadcom WiFi (akmod-wl) and FaceTimeHD camera (akmod-facetimehd)
 # in an isolated builder so build-only deps don't pollute the final image.
-FROM quay.io/fedora/fedora-bootc:44 AS builder
+FROM quay.io/fedora/fedora-bootc:43 AS builder
 
 RUN <<BUILDER
 set -euo pipefail
@@ -61,7 +61,7 @@ echo "▸ Builder stage complete"
 BUILDER
 
 # ── Stage 2: Final bootable image ──────────────────────────────────────────
-FROM quay.io/fedora/fedora-bootc:44
+FROM quay.io/fedora/fedora-bootc:43
 
 # Copy pre-built kernel module RPMs from builder
 COPY --from=builder /var/cache/akmods/wl/kmod-wl*.rpm /tmp/kmods/
@@ -158,6 +158,14 @@ rm -rfv /var/cache/* \
         /var/log/* \
         /var/tmp/*
 SYSCONFIG
+
+# ── Install GNOME Shell (minimal, no weak deps) ──
+RUN echo "▸ Installing GNOME Shell (minimal)" && \
+    dnf5 install @gnome-desktop -y && \
+    dnf5 clean all && \
+    rm -rfv /var/cache/* \
+            /var/log/* \
+            /var/tmp/*
 
 # ── Install RPM packages from list & configure services ──
 RUN <<PACKAGES
