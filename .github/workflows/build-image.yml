@@ -44,9 +44,9 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Generate timestamp (Chile time)
+      - name: Generate timestamp (Lithuania time)
         id: timestamp
-        run: echo "date=$(TZ='America/Santiago' date +'%Y%m%d-%H%M')" >> $GITHUB_OUTPUT
+        run: echo "date=$(TZ='Europe/Vilnius' date +'%Y%m%d-%H%M')" >> $GITHUB_OUTPUT
 
       - name: Extract image metadata
         id: meta
