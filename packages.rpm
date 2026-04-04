@@ -33,6 +33,7 @@ tree
 unzip
 usbutils
 zram
+zip
 
 # ── Input method support ───────────────────────────────────────────
 ibus-gtk4
