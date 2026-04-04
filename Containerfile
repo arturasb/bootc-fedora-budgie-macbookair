@@ -161,7 +161,12 @@ SYSCONFIG
 
 # ── Install GNOME Shell (minimal, no weak deps) ──
 RUN echo "▸ Installing GNOME" && \
-    dnf5 -y install @gnome-desktop && \
+    dnf5 -y install \
+    gnome-shell gdm gnome-session-wayland-session \
+    gnome-settings-daemon gnome-control-center \
+    gnome-terminal nautilus mutter dconf \
+    gnome-software gnome-system-monitor eog evince \
+    file-roller gvfs \
     dnf5 clean all && \
     rm -rfv /var/cache/* \
             /var/log/* \
