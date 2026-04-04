@@ -4,7 +4,6 @@ gdm
 gnome-session-wayland-session
 gnome-settings-daemon
 gnome-control-center
-gnome-terminal
 nautilus
 mutter
 dconf
@@ -16,6 +15,8 @@ file-roller
 gvfs
 flatpak
 xdg-utils
+glibc-all-langpacks
+ptyxis
 
 # ── File thumbnailers ──────────────────────────────────────────────
 evince-thumbnailer
