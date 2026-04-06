@@ -12,9 +12,6 @@ FROM quay.io/fedora/fedora-bootc:43 AS builder
 RUN <<BUILDER
 set -euo pipefail
 
-echo "▸ Upgrading kernel packages"
-dnf5 upgrade -y 'kernel*' --refresh
-
 echo "▸ Installing kernel-devel and build tools"
 dnf5 -y install kernel-devel akmods wget git make gcc --refresh
 
@@ -94,14 +91,11 @@ NONFS
 
 mv -v dracut-facetimehd.conf /etc/dracut.conf.d/facetimehd.conf
 
-echo "▸ Regenerating initramfs"
-kver="$(rpm -q kernel-core --queryformat '%{VERSION}-%{RELEASE}.%{ARCH}')"
-dracut -f "/usr/lib/modules/${kver}/initramfs.img" "${kver}"
-
 # ── Kernel Arguments: ACPI OSI hacks for MacBook hardware ──
 # Declaring kernel arguments via bootc-native configuration files.
 mkdir -p /usr/lib/bootc/kargs.d/
-echo 'kargs = ["acpi_osi=\"!Darwin\"", "acpi_osi=\"!Windows 2012\""]' > /usr/lib/bootc/kargs.d/10-macbook.toml
+echo 'acpi_osi="!Darwin" acpi_osi="!Windows 2012" quiet rhgb' > /usr/lib/bootc/kargs.d/10-macbook.conf
+
 
 # ── RPMFusion for broadcom-wl runtime dependencies ──
 FEDORA_RELEASE="$(rpm -E '%fedora')"
@@ -166,6 +160,12 @@ RUN echo "▸ Installing GNOME" && \
     rm -rfv /var/cache/* \
             /var/log/* \
             /var/tmp/*
+
+RUN systemctl enable gdm
+
+echo "▸ Regenerating initramfs"
+dracut --pedantic --regenerate-all --force
+
 
 # ── Install RPM packages from list & configure services ──
 RUN <<PACKAGES
