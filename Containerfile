@@ -159,9 +159,9 @@ rm -rfv /var/cache/* \
         /var/tmp/*
 SYSCONFIG
 
-# ── Install Budgie Desktop ──
-RUN echo "▸ Installing Budgie Desktop" && \
-    dnf5 install @budgie-desktop -y && \
+# ── Install Desktop Environment ──
+RUN echo "▸ Installing GNOME" && \
+    dnf5 install @gnome-desktop -y && \
     dnf5 clean all && \
     rm -rfv /var/cache/* \
             /var/log/* \
