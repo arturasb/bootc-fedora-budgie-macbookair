@@ -1,4 +1,7 @@
 # ── Desktop essentials ──────────────────────────────────────────────
+kernel
+kernel-modules
+linux-firmware
 flatpak
 glibc-all-langpacks
 # ── File thumbnailers ──────────────────────────────────────────────
