@@ -44,7 +44,8 @@ flatpak install --user --noninteractive --assumeyes --or-update flathub \
     org.gnome.Calendar \
     org.gnome.Contacts \
     org.signal.Signal \
-    org.freedesktop.Platform.VAAPI.Intel
+    org.freedesktop.Platform.VAAPI.Intel \
+    org.freedesktop.Platform.ffmpeg-full
 
 # Mark as completed so this service won't run again
 mkdir -p "$(dirname "$FLAG")"
