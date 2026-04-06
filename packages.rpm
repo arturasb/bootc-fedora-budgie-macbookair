@@ -10,7 +10,7 @@ gnome-epub-thumbnailer
 # ── System utilities ───────────────────────────────────────────────
 auditctl
 git
-libva-intel-driver
+intel-media-driver
 ffmpeg
 libnma
 libva-utils
