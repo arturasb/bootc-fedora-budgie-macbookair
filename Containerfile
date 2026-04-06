@@ -12,6 +12,9 @@ FROM quay.io/fedora/fedora-bootc:43 AS builder
 RUN <<BUILDER
 set -euo pipefail
 
+echo "▸ Upgrading kernel packages"
+dnf5 upgrade -y 'kernel*' --refresh
+
 echo "▸ Installing kernel-devel and build tools"
 dnf5 -y install kernel-devel akmods wget git make gcc --refresh
 
@@ -91,11 +94,14 @@ NONFS
 
 mv -v dracut-facetimehd.conf /etc/dracut.conf.d/facetimehd.conf
 
+echo "▸ Regenerating initramfs"
+kver="$(rpm -q kernel-core --queryformat '%{VERSION}-%{RELEASE}.%{ARCH}')"
+dracut -f "/usr/lib/modules/${kver}/initramfs.img" "${kver}"
+
 # ── Kernel Arguments: ACPI OSI hacks for MacBook hardware ──
 # Declaring kernel arguments via bootc-native configuration files.
 mkdir -p /usr/lib/bootc/kargs.d/
-echo 'acpi_osi="!Darwin" acpi_osi="!Windows 2012" quiet rhgb' > /usr/lib/bootc/kargs.d/10-macbook.conf
-
+echo 'kargs = ["acpi_osi=\"!Darwin\"", "acpi_osi=\"!Windows 2012\""]' > /usr/lib/bootc/kargs.d/10-macbook.toml
 
 # ── RPMFusion for broadcom-wl runtime dependencies ──
 FEDORA_RELEASE="$(rpm -E '%fedora')"
@@ -151,20 +157,15 @@ dnf5 clean all
 rm -rfv /var/cache/* \
         /var/log/* \
         /var/tmp/*
+SYSCONFIG
+
 # ── Install Desktop Environment ──
-echo "▸ Installing GNOME" && \
+RUN echo "▸ Installing GNOME" && \
     dnf5 install @gnome-desktop -y && \
     dnf5 clean all && \
     rm -rfv /var/cache/* \
             /var/log/* \
             /var/tmp/*
-
-systemctl enable gdm
-
-echo "▸ Regenerating initramfs"
-dracut --pedantic --regenerate-all --force
-
-SYSCONFIG
 
 # ── Install RPM packages from list & configure services ──
 RUN <<PACKAGES
