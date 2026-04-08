@@ -15,8 +15,11 @@ else
     COPR_RELEASE="${FEDORA_RELEASE}"
 fi
 
+# Enable COPR (Using the direct URL approach from your original file)
+dnf -y install dnf-plugins-core
+
 # 2. Enable RPM Fusion and FaceTimeHD COPR
-RUN dnf -y install \
+dnf -y install \
     "https://mirrors.rpmfusion.org/free/fedora/rpmfusion-free-release-${FEDORA_RELEASE}.noarch.rpm" \
     "https://mirrors.rpmfusion.org/nonfree/fedora/rpmfusion-nonfree-release-${FEDORA_RELEASE}.noarch.rpm" && \
     dnf -y copr enable "https://copr.fedorainfracloud.org/coprs/mulderje/facetimehd-kmod/repo/fedora-${COPR_RELEASE}/mulderje-facetimehd-kmod-fedora-${COPR_RELEASE}.repo"
