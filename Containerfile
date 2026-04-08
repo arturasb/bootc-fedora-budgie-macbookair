@@ -39,10 +39,12 @@ RUN KERNEL_VERSION=$(rpm -q kernel-core --queryformat '%{VERSION}-%{RELEASE}.%{A
     akmods --force --kernels "${KERNEL_VERSION}" --kmod wl
 
 # 5. Extract FaceTimeHD Firmware from Apple BootCamp Driver
-RUN git clone --depth 1 https://github.com/patjak/facetimehd-firmware.git /tmp/facetimehd-firmware && \
+RUN git clone --depth 1 "https://github.com/patjak/facetimehd-firmware.git" /tmp/facetimehd-firmware && \
     cd /tmp/facetimehd-firmware && \
-    make && make install \
-    cd / && rm -rf /tmp/facetimehd-firmware
+    make && \
+    make install && \
+    cd / && \
+    rm -rf /tmp/facetimehd-firmware
 
 # 5.1 Bootc Native Kernel Arguments & Modprobe
 RUN mkdir -p /usr/lib/bootc/kargs.d/ && \
