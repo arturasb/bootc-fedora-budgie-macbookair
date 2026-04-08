@@ -66,5 +66,35 @@ RUN echo "facetimehd" > /etc/modules-load.d/facetimehd.conf && \
 RUN kver="$(rpm -q kernel-core --queryformat '%{VERSION}-%{RELEASE}.%{ARCH}')" && \
     dracut -vf "/usr/lib/modules/${kver}/initramfs.img" "${kver}"
 
-# 8. Lint the final image
+RUN << CLEANUP
+
+# 8. Final cleanup
+echo "▸ Final cleanup for bootc compliance"
+dnf5 clean all
+rm -rfv /var/cache/* \
+        /var/log/* \
+        /var/tmp/* \
+        /var/cache/libdnf5/* \
+        /var/lib/dnf \
+        /var/usrlocal/share/applications/mimeinfo.cache \
+        /var/roothome/.*
+
+# 8.1. Final check for /usr/etc
+rm -rvf /usr/etc
+
+# 8.2. Declare /var dirs for bootc lint compliance ──
+echo "▸ Generating tmpfiles.d entries for /var dirs"
+find /var -mindepth 1 -maxdepth 4 -type d \
+  | grep -v '^/var/home' \
+  | sort \
+  | while read -r dir; do
+      mode=$(stat -c '%a' "${dir}")
+      user=$(stat -c '%u' "${dir}")
+      group=$(stat -c '%g' "${dir}")
+      echo "d ${dir} ${mode} ${user} ${group} - -"
+    done > /usr/lib/tmpfiles.d/bootc-var-dirs.conf
+
+CLEANUP
+
+# 9. Lint the final image
 RUN bootc container lint
