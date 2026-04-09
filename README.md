@@ -12,24 +12,18 @@ Immutable Fedora 43 image with Budgie Desktop, tailored for MacBook Air hardware
 | **Desktop** | Budgie Desktop |
 | **WiFi** | Broadcom `akmod-wl` via RPMFusion Non-Free |
 | **Camera** | FaceTimeHD via [mulderje/facetimehd-kmod](https://copr.fedorainfracloud.org/coprs/mulderje/facetimehd-kmod/) COPR + [firmware](https://github.com/patjak/facetimehd-firmware) |
-| **Filesystem** | EXT4 for root |
 | **Fan Control** | [`mbpfan`](https://github.com/linux-on-mac/mbpfan) (built from source v2.4.0) |
 | **Video Accel** | `libva-intel-media-driver` (VA-API) |
-| **Flatpaks** | User-level (`--user`) via first-login bootstrap |
 
 ## File Structure
 
 | File | Purpose |
 |------|---------|
 | `Containerfile` | Multi-stage build: kernel modules in builder → final image |
-| `packages.rpm` | RPM packages to install (one per line) |
-| `post-install.sh` | First-login script: installs Flatpaks as `--user` |
-| `post-install.service` | Systemd **user** service (runs on first login) |
 | `config.toml` | Anaconda kickstart config for ISO generation |
 | `hid-apple.conf` | MacBook keyboard driver configuration |
 | `dracut-facetimehd.conf` | Includes FaceTimeHD firmware in initramfs |
 | `suspend-fix.service` | Fixes MacBook spurious wakeup from suspend |
-| `powertop.service` | Battery optimization via PowerTOP auto-tune |
 | `.github/workflows/build-image.yml` | Manual CI/CD build |
 
 ## MacBook-Specific Features
@@ -41,11 +35,6 @@ Immutable Fedora 43 image with Budgie Desktop, tailored for MacBook Air hardware
 - **Battery**: PowerTOP auto-tune and `libva-intel-media-driver` for hardware video decoding.
 - **Thermals**: [`mbpfan`](https://github.com/linux-on-mac/mbpfan) (built from source v2.4.0) enabled with a custom fan curve for better heat management.
 - **Kernel**: `acpi_osi` arguments for improved ACPI/Power management compatibility.
-- **Ambient Light**: [macbook-lighter](https://github.com/harttle/macbook-lighter) for automatic screen/keyboard backlight.
-
-## Flatpak Applications (user-level)
-
-Flatpak applications are installed automatically as `--user` on the first graphical login via a systemd user service (`post-install.service`). See [`post-install.sh`](post-install.sh) for the full list of applications.
 
 ## How to Update
 
