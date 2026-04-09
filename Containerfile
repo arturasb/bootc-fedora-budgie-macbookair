@@ -68,7 +68,7 @@ COPY suspend-fix.service /usr/lib/systemd/system/suspend-fix.service
 RUN echo "facetimehd" > /etc/modules-load.d/facetimehd.conf && \
     systemctl set-default graphical.target && \
     systemctl enable lightdm.service NetworkManager.service mbpfan.service suspend-fix.service zram-swap.service && \
-    systemctl --global enable pipewire.service wireplumber.service && \
+    systemctl --global enable pipewire.service wireplumber.service
 
 # 6.1. systemd-remount-fs: bootc manages root mount options via initrd, not fstab
 RUN systemctl mask systemd-remount-fs.service
