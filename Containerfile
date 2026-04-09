@@ -46,7 +46,15 @@ RUN git clone --depth 1 "https://github.com/patjak/facetimehd-firmware.git" /tmp
     cd / && \
     rm -rf /tmp/facetimehd-firmware
 
-# 5.1 Bootc Native Kernel Arguments & Modprobe
+# 5.1. Writable directories (bootc best practice)
+# See: https://bootc-dev.github.io/bootc/building/guidance.html
+echo "▸ Setting up writable /opt and /usr/local"
+rm -rvf /opt && mkdir -vp /var/opt && ln -vs /var/opt /opt
+mkdir -vp /var/usrlocal && mv -v /usr/local/* /var/usrlocal/ 2>/dev/null || true
+rm -rvf /usr/local && ln -vs /var/usrlocal /usr/local
+
+
+# 5.2 Bootc Native Kernel Arguments & Modprobe
 RUN mkdir -p /usr/lib/bootc/kargs.d/ && \
     echo 'kargs = ["acpi_osi=!Darwin", "acpi_osi=!Windows 2012"]' > /usr/lib/bootc/kargs.d/10-macbook.toml && \
     mkdir -p /usr/lib/modprobe.d/ && \
