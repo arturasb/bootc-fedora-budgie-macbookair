@@ -60,19 +60,24 @@ RUN mkdir -p /usr/lib/bootc/kargs.d/ && \
     mkdir -p /usr/lib/modprobe.d/ && \
     echo 'options snd_hda_intel power_save=1' > /usr/lib/modprobe.d/audio-power-save.conf
 
+# 5.3. Disable XHC1/LID0 ACPI wakeup sources (prevents spurious wakeups)
+COPY suspend-fix.service /usr/lib/systemd/system/suspend-fix.service
 
 # 6. System Configuration & Services
 # Load facetimehd module and enable critical hardware/GUI services
 RUN echo "facetimehd" > /etc/modules-load.d/facetimehd.conf && \
     systemctl set-default graphical.target && \
-    systemctl enable lightdm.service NetworkManager.service mbpfan.service && \
+    systemctl enable lightdm.service NetworkManager.service mbpfan.service suspend-fix.service zram-swap.service && \
     systemctl --global enable pipewire.service wireplumber.service && \
-    systemctl enable zram-swap.service
 
-# 6.1. Creating required directories
+# 6.1. systemd-remount-fs: bootc manages root mount options via initrd, not fstab
+RUN systemctl mask systemd-remount-fs.service
+
+# 6.2. Creating required directories
 RUN echo "▸ Creating required directories" && \
     mkdir -vp /var/roothome /data /var/home
-# 6.2. Installing kernel-modules-extra for broader hardware support
+
+# 6.3. Installing kernel-modules-extra for broader hardware support
 RUN echo "▸ Installing kernel-modules-extra for broader hardware support" && \
     dnf5 -y install kernel-modules-extra --refresh
 
