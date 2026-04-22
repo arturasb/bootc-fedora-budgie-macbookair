@@ -63,11 +63,14 @@ RUN mkdir -p /usr/lib/bootc/kargs.d/ && \
 # 5.3. Disable XHC1/LID0 ACPI wakeup sources (prevents spurious wakeups)
 COPY suspend-fix.service /usr/lib/systemd/system/suspend-fix.service
 
+# 5.4. Powertop optimizations to save battery
+COPY powertop.service /usr/lib/systemd/system/powertop.service
+
 # 6. System Configuration & Services
 # Load facetimehd module and enable critical hardware/GUI services
 RUN echo "facetimehd" > /etc/modules-load.d/facetimehd.conf && \
     systemctl set-default graphical.target && \
-    systemctl enable lightdm.service NetworkManager.service mbpfan.service suspend-fix.service zram-swap.service && \
+    systemctl enable lightdm.service NetworkManager.service mbpfan.service suspend-fix.service powertop.service zram-swap.service && \
     systemctl --global enable pipewire.service wireplumber.service
 
 # 6.1. systemd-remount-fs: bootc manages root mount options via initrd, not fstab
