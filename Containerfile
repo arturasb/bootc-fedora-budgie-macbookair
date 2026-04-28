@@ -1,5 +1,5 @@
-# 1. Base: Use official Fedora 43 bootc
-FROM quay.io/fedora/fedora-bootc:43
+# 1. Base: Use official Fedora 44 bootc
+FROM quay.io/fedora/fedora-bootc:44
 
 RUN set -euo pipefail
 
