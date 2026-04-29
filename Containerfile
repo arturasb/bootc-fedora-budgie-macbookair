@@ -27,7 +27,7 @@ RUN dnf5 -y --refresh install \
 
 # 4. MacBook Hardware: Drivers & Thermal Management
 # broadcom-wl for WiFi, facetimehd for camera, mbpfan for cooling
-RUN dnf5 -y --refresh install \
+RUN dnf5 -y --refresh --setopt=tsflags=noscripts install \
     broadcom-wl akmod-wl \
     akmod-facetimehd facetimehd-kmod-common \
     kernel-devel akmods wget git make gcc curl xz cpio \
@@ -36,8 +36,10 @@ RUN dnf5 -y --refresh install \
 
 # 4.1. Build Akmods for the specific kernel in the image
 RUN KERNEL_VERSION=$(rpm -q kernel-core --queryformat '%{VERSION}-%{RELEASE}.%{ARCH}') && \
+    mkdir -p /var/cache/akmods /usr/src/akmods && \
     chown -R akmodsbuild:akmodsbuild /var/cache/akmods /usr/src/akmods && \
     echo "▸ Building modules for kernel: ${KERNEL_VERSION}" && \
+    # Using sudo -u akmodsbuild
     sudo -u akmodsbuild akmods --force --kernels "${KERNEL_VERSION}" --kmod facetimehd && \
     sudo -u akmodsbuild akmods --force --kernels "${KERNEL_VERSION}" --kmod wl
 
