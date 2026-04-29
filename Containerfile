@@ -1,5 +1,5 @@
 # 1. Base: Use official Fedora 44 bootc
-FROM quay.io/repository/fedora-ostree-desktops/budgie-atomic:44
+FROM quay.io/repository/fedora-ostree-desktops/budgie-atomic
 
 RUN set -euo pipefail
 
