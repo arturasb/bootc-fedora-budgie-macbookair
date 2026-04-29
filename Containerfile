@@ -34,17 +34,16 @@ RUN dnf5 -y --refresh --setopt=tsflags=noscripts install \
     NetworkManager-wifi && \
     dnf5 clean all
 
-# 4.1. Build Akmods for the specific kernel in the image
+# 4.1. Build and Install Akmods
 RUN KERNEL_VERSION=$(rpm -q kernel-core --queryformat '%{VERSION}-%{RELEASE}.%{ARCH}') && \
-    # Ensure build directories exist and are wide open for the akmodsbuild user
     mkdir -p /var/cache/akmods /var/tmp && \
     chmod 777 /var/cache/akmods /var/tmp && \
-    echo "▸ Building modules for kernel: ${KERNEL_VERSION}" && \
-    # Run as akmodsbuild user using 'su -s /bin/bash' 
-    # We pass the kernel version explicitly to bypass uname checks
-    su -s /bin/bash akmodsbuild -c "akmods --force --kernels ${KERNEL_VERSION} --kmod facetimehd" && \
-    su -s /bin/bash akmodsbuild -c "akmods --force --kernels ${KERNEL_VERSION} --kmod wl" && \
-    # Restore safe permissions
+    # 1. Build the RPMs as the akmodsbuild user (--rebuild generates the RPM without installing)
+    su -s /bin/bash akmodsbuild -c "akmods --rebuild --kernels ${KERNEL_VERSION} --kmod facetimehd" && \
+    su -s /bin/bash akmodsbuild -c "akmods --rebuild --kernels ${KERNEL_VERSION} --kmod wl" && \
+    # 2. Install the newly created RPMs as root
+    dnf install -y /var/cache/akmods/facetimehd/*.rpm /var/cache/akmods/wl/*.rpm && \
+    # 3. Cleanup
     chmod 755 /var/tmp
 
 # 5. Extract FaceTimeHD Firmware from Apple BootCamp Driver
