@@ -7,10 +7,10 @@ RUN set -euo pipefail
 RUN dnf5 -y --refresh install \
     "https://mirrors.rpmfusion.org/free/fedora/rpmfusion-free-release-44.noarch.rpm" \
     "https://mirrors.rpmfusion.org/nonfree/fedora/rpmfusion-nonfree-release-44.noarch.rpm" && \
-    dnf5 --disablerepo=rpmfusion-rawhide install && \
     # Direct download of COPR repo file to avoid dnf5 plugin issues
     curl -L -o /etc/yum.repos.d/_copr_mulderje-facetimehd-kmod.repo \
-    https://copr.fedorainfracloud.org/coprs/mulderje/facetimehd-kmod/repo/fedora-44/mulderje-facetimehd-kmod-fedora-44.repo
+    https://copr.fedorainfracloud.org/coprs/mulderje/facetimehd-kmod/repo/fedora-44/mulderje-facetimehd-kmod-fedora-44.repo && \
+    sed -i '/^baseurl=/a releasever=44' /etc/yum.repos.d/_copr_mulderje-facetimehd-kmod.repo
 
 # 3. Install Budgie Desktop (Onyx) and Essential Tools
 # Includes WireGuard, Toolbox, and Silverblue-standard packages
