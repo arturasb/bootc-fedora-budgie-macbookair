@@ -77,6 +77,9 @@ COPY suspend-fix.service /usr/lib/systemd/system/suspend-fix.service
 # 5.5. Powertop optimizations to save battery
 COPY powertop.service /usr/lib/systemd/system/powertop.service
 
+# 5.6 Kernel modules: ensure coretemp + applesmc loaded at boot
+COPY macbook.conf /usr/lib/modules-load.d/macbook.conf
+
 # 6. System Configuration & Services
 # Load facetimehd module and enable critical hardware/GUI services
 RUN echo "facetimehd" > /etc/modules-load.d/facetimehd.conf && \
