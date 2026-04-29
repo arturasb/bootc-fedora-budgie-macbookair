@@ -36,12 +36,16 @@ RUN dnf5 -y --refresh --setopt=tsflags=noscripts install \
 
 # 4.1. Build Akmods for the specific kernel in the image
 RUN KERNEL_VERSION=$(rpm -q kernel-core --queryformat '%{VERSION}-%{RELEASE}.%{ARCH}') && \
-    mkdir -p /var/cache/akmods /usr/src/akmods && \
-    chown -R akmodsbuild:akmodsbuild /var/cache/akmods /usr/src/akmods && \
+    # Ensure build directories exist and are wide open for the akmodsbuild user
+    mkdir -p /var/cache/akmods /var/tmp && \
+    chmod 777 /var/cache/akmods /var/tmp && \
     echo "▸ Building modules for kernel: ${KERNEL_VERSION}" && \
-    # Using sudo -u akmodsbuild
-    sudo -u akmodsbuild akmods --force --kernels "${KERNEL_VERSION}" --kmod facetimehd && \
-    sudo -u akmodsbuild akmods --force --kernels "${KERNEL_VERSION}" --kmod wl
+    # Run as akmodsbuild user using 'su -s /bin/bash' 
+    # We pass the kernel version explicitly to bypass uname checks
+    su -s /bin/bash akmodsbuild -c "akmods --force --kernels ${KERNEL_VERSION} --kmod facetimehd" && \
+    su -s /bin/bash akmodsbuild -c "akmods --force --kernels ${KERNEL_VERSION} --kmod wl" && \
+    # Restore safe permissions
+    chmod 755 /var/tmp
 
 # 5. Extract FaceTimeHD Firmware from Apple BootCamp Driver
 RUN git clone --depth 1 "https://github.com/patjak/facetimehd-firmware.git" /tmp/facetimehd-firmware && \
