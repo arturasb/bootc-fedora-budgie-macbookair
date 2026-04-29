@@ -17,6 +17,7 @@ RUN dnf5 -y --setopt=install_weak_deps=True group install budgie-desktop && \
     dnf5 -y --refresh install \
     budgie-extras gnome-terminal nautilus gtklock polkit \
     plymouth plymouth-system-theme plymouth-graphics-libs \
+    gnome-software gnome-software-rpm-ostree \
     flatpak distrobox \
     wireguard-tools systemd-resolved nm-connection-editor \
     glibc-all-langpacks intel-media-driver mc btop libva-utils zram zip unzip usbutils lm_sensors powertop && \
