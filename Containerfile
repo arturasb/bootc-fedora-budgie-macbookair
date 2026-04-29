@@ -15,7 +15,8 @@ RUN dnf5 -y --refresh install \
 # Includes WireGuard, Toolbox, and Silverblue-standard packages
 RUN dnf5 -y --setopt=install_weak_deps=True group install budgie-desktop && \
     dnf5 -y --refresh install \
-    gtklock polkit \
+    budgie-extras gnome-terminal nautilus gtklock polkit \
+    plymouth plymouth-system-theme plymouth-graphics-libs \
     flatpak distrobox \
     wireguard-tools systemd-resolved nm-connection-editor \
     glibc-all-langpacks intel-media-driver mc btop libva-utils zram zip unzip usbutils lm_sensors powertop && \
@@ -75,8 +76,11 @@ COPY suspend-fix.service /usr/lib/systemd/system/suspend-fix.service
 # 5.5. Powertop optimizations to save battery
 COPY powertop.service /usr/lib/systemd/system/powertop.service
 
-# 5.6 Kernel modules: ensure coretemp + applesmc loaded at boot
+# 5.6. Kernel modules: ensure coretemp + applesmc loaded at boot
 COPY macbook.conf /usr/lib/modules-load.d/macbook.conf
+
+# 5.7. Ensure Plymouth is the default boot splash
+RUN plymouth-set-default-theme -R spinner
 
 # 6. System Configuration & Services
 # Load facetimehd module and enable critical hardware/GUI services
