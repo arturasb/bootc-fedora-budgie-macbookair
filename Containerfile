@@ -15,7 +15,7 @@ RUN dnf5 -y --refresh install \
 # Includes WireGuard, Toolbox, and Silverblue-standard packages
 RUN dnf5 -y --setopt=install_weak_deps=True group install budgie-desktop && \
     dnf5 -y --refresh install \
-    budgie-extras gnome-terminal nautilus gtklock polkit \
+    gnome-terminal nautilus gtklock polkit \
     plymouth plymouth-system-theme plymouth-graphics-libs \
     gnome-software gnome-software-rpm-ostree \
     flatpak distrobox \
