@@ -15,7 +15,6 @@ RUN dnf5 -y --refresh install \
 # Includes WireGuard, Toolbox, and Silverblue-standard packages
 RUN dnf5 -y group install budgie-desktop-environment && \
     dnf5 -y --refresh install \
-    slick-greeter \
     flatpak distrobox \
     wireguard-tools systemd-resolved nm-connection-editor \
     libavcodec-freeworld \
@@ -83,7 +82,7 @@ COPY macbook.conf /usr/lib/modules-load.d/macbook.conf
 # Load facetimehd module and enable critical hardware/GUI services
 RUN echo "facetimehd" > /etc/modules-load.d/facetimehd.conf && \
     systemctl set-default graphical.target && \
-    systemctl enable lightdm.service NetworkManager.service mbpfan.service suspend-fix.service powertop.service zram-swap.service && \
+    systemctl enable NetworkManager.service mbpfan.service suspend-fix.service powertop.service zram-swap.service && \
     systemctl --global enable pipewire.service wireplumber.service
 
 # 6.1. systemd-remount-fs: bootc manages root mount options via initrd, not fstab
