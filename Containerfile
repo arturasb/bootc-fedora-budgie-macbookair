@@ -13,7 +13,7 @@ RUN dnf5 -y --refresh install \
 
 # 3. Install Budgie Desktop (Onyx) and Essential Tools
 # Includes WireGuard, Toolbox, and Silverblue-standard packages
-RUN dnf5 -y group install "Budgie Desktop" && \
+RUN dnf5 -y --setopt=install_weak_deps=True group install budgie-desktop && \
     dnf5 -y --refresh install \
     gtklock polkit \
     flatpak distrobox \
