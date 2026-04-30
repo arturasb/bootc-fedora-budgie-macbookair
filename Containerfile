@@ -84,6 +84,9 @@ COPY macbook.conf /usr/lib/modules-load.d/macbook.conf
 # 5.7. Ensure Plymouth is the default boot splash
 RUN plymouth-set-default-theme -R spinner
 
+# 5.8. MacBook keyboard: fn key behavior
+COPY hid-apple.conf /usr/lib/modprobe.d/hid-apple.conf
+
 # 6. System Configuration & Services
 # Load facetimehd module and enable critical hardware/GUI services
 RUN echo "facetimehd" > /etc/modules-load.d/facetimehd.conf && \
