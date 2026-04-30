@@ -68,7 +68,7 @@ RUN echo "▸ Setting up writable /opt and /usr/local" && \
 
 # 5.3 Bootc Native Kernel Arguments & Modprobe
 RUN mkdir -p /usr/lib/bootc/kargs.d/ && \
-    echo 'kargs = ["acpi_osi=!Darwin", "acpi_osi=!Windows 2012"]' > /usr/lib/bootc/kargs.d/10-macbook.toml && \
+    echo 'kargs = ["acpi_osi=!Darwin", "acpi_osi=!Windows 2012", "rhgb", "quiet"]' > /usr/lib/bootc/kargs.d/10-macbook.toml && \
     mkdir -p /usr/lib/modprobe.d/ && \
     echo 'options snd_hda_intel power_save=1' > /usr/lib/modprobe.d/audio-power-save.conf
 
