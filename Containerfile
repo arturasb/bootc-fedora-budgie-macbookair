@@ -92,7 +92,6 @@ RUN mkdir /etc/systemd/logind.conf.d/
 COPY 10-powerkey.conf /etc/systemd/logind.conf.d/10-powerkey.conf
 
 # 5.10. 
-RUN mkdir /etc/polkit-1/rules.d/
 COPY 50-shutdown.rules /etc/polkit-1/rules.d/50-shutdown.rules
 
 
