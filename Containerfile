@@ -91,6 +91,11 @@ COPY hid-apple.conf /usr/lib/modprobe.d/hid-apple.conf
 COPY mkdir /etc/systemd/logind.conf.d/ && \
     10-powerkey.conf /etc/systemd/logind.conf.d/10-powerkey.conf
 
+# 5.10. 
+COPY mkdir /etc/polkit-1/rules.d/ && \
+    50-shutdown.rules /etc/polkit-1/rules.d/50-shutdown.rules
+
+
 # 6. System Configuration & Services
 # Load facetimehd module and enable critical hardware/GUI services
 RUN echo "facetimehd" > /etc/modules-load.d/facetimehd.conf && \
