@@ -18,6 +18,7 @@ RUN dnf5 -y --setopt=install_weak_deps=True group install budgie-desktop && \
     gnome-terminal nautilus gtklock polkit \
     plymouth plymouth-system-theme plymouth-graphics-libs \
     gnome-software gnome-software-rpm-ostree \
+    firewalld firewall-config \
     flatpak distrobox \
     wireguard-tools systemd-resolved nm-connection-editor \
     glibc-all-langpacks intel-media-driver mc btop libva-utils zram zip unzip usbutils lm_sensors powertop && \
@@ -87,7 +88,7 @@ RUN plymouth-set-default-theme -R spinner
 # Load facetimehd module and enable critical hardware/GUI services
 RUN echo "facetimehd" > /etc/modules-load.d/facetimehd.conf && \
     systemctl set-default graphical.target && \
-    systemctl enable NetworkManager.service mbpfan.service suspend-fix.service powertop.service zram-swap.service && \
+    systemctl enable firewalld NetworkManager.service mbpfan.service suspend-fix.service powertop.service zram-swap.service && \
     systemctl --global enable pipewire.service wireplumber.service
 
 # 6.1. systemd-remount-fs: bootc manages root mount options via initrd, not fstab
