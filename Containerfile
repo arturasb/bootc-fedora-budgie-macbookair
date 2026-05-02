@@ -4,7 +4,9 @@ FROM quay.io/fedora-ostree-desktops/budgie-atomic:44
 # 1.1. Making /opt immutable
 RUN rm /opt && mkdir /opt
 
-RUN set -euo pipefail
+# 1.2 Detect kernel NEVRA once
+ARG KVER
+RUN if [ -z "${KVER:-}" ]; then KVER="$(rpm -q --qf '%{VERSION}-%{RELEASE}.%{ARCH}' kernel-core)"; fi && echo "$KVER" > /KVER && cat /KVER
 
 # 2. Setup Repositories
 RUN dnf5 -y --refresh install \
@@ -14,26 +16,37 @@ RUN dnf5 -y --refresh install \
     curl -L -o /etc/yum.repos.d/_copr_mulderje-facetimehd-kmod.repo \
     https://copr.fedorainfracloud.org/coprs/mulderje/facetimehd-kmod/repo/fedora-44/mulderje-facetimehd-kmod-fedora-44.repo
 
-# 4. MacBook Hardware: Drivers & Thermal Management
-# broadcom-wl for WiFi, facetimehd for camera, mbpfan for cooling
-RUN dnf5 -y install \
-    broadcom-wl akmod-wl \
-    akmod-facetimehd facetimehd-kmod-common \
-    kernel-devel akmods wget git make gcc curl xz cpio
+# 2.1. Detect kernel NEVRA once
+ARG KVER
+RUN if [ -z "${KVER:-}" ]; then KVER="$(rpm -q --qf '%{VERSION}-%{RELEASE}.%{ARCH}' kernel-core)"; fi && echo "$KVER" > /KVER && cat /KVER
 
-# 4.1. Create build user and dirs
-RUN useradd -m -s /bin/bash akmodsbuild || true && \
-    mkdir -p /var/cache/akmods /var/lib/akmods/build /var/cache/akmods/output && \
-    chown -R akmodsbuild:akmodsbuild /var/cache/akmods /var/lib/akmods /home/akmodsbuild
+# 2.2. Install base build/runtime deps BUT DO NOT install akmod-* packages from repos
+RUN KVER="$(cat /KVER)" && \
+    dnf5 -y --refresh install \
+      gcc make perl dkms elfutils-libelf-devel \
+      "kernel-devel-${KVER}" "kernel-headers-${KVER}" \
+      akmods wget git make gcc curl xz cpio \
+      broadcom-wl || true
 
-# 4.2. Configure akmods to build-only (create fragment)
+# 2.3. Create unprivileged build user and akmods dirs before any akmods runs
+RUN useradd -m -s /bin/bash akmodsbuild && \
+    mkdir -p /var/lib/akmods/build /var/cache/akmods/output && \
+    chown -R akmodsbuild:akmodsbuild /var/lib/akmods /var/cache/akmods /home/akmodsbuild
+
+# 2.4. Make akmods build-only (prevent it from trying to install modules)
 RUN printf 'AKMODS_BUILD_DIR=/var/lib/akmods/build\nAKMODS_OUTPUT_DIR=/var/cache/akmods/output\nAKMODS_INSTALL=no\n' > /etc/akmods.conf
 
-# 4.3. Build akmods as unprivileged user and install resulting rpms with dnf
-RUN KVER="${KVER:-$(cat /KVER_FILE)}" && \
+# 2.5. Build facetimehd + wl as non-root (produces rpms under /var/cache/akmods/<kmod>/)
+RUN KVER="$(cat /KVER)" && \
     runuser -u akmodsbuild -- bash -lc "KERN_DIR=/lib/modules/${KVER}/build akmods --force --kernels ${KVER} --kmod facetimehd || true" && \
-    runuser -u akmodsbuild -- bash -lc "KERN_DIR=/lib/modules/${KVER}/build akmods --force --kernels ${KVER} --kmod wl || true" && \
-    dnf -y install /var/cache/akmods/wl/*.rpm /var/cache/akmods/facetimehd/*.rpm || true
+    runuser -u akmodsbuild -- bash -lc "KERN_DIR=/lib/modules/${KVER}/build akmods --force --kernels ${KVER} --kmod wl || true"
+
+# 2.6. Install the generated rpms but skip their %post scriptlets (they would try to run akmods)
+RUN rpm -Uvh --noscripts /var/cache/akmods/wl/*.rpm /var/cache/akmods/facetimehd/*.rpm || \
+    dnf5 -y localinstall /var/cache/akmods/wl/*.rpm /var/cache/akmods/facetimehd/*.rpm || true
+
+# 2.7. Finalize: depmod & regenerate initramfs for target kernel
+RUN KVER="$(cat /KVER)" && depmod -a "${KVER}" && dracut --kver "${KVER}" --force || true
 
 # 5. Extract FaceTimeHD Firmware from Apple BootCamp Driver
 RUN git clone --depth 1 "https://github.com/patjak/facetimehd-firmware.git" /tmp/facetimehd-firmware && \
