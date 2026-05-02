@@ -14,7 +14,7 @@ RUN dnf5 -y --refresh install \
 
 # 2.1 MacBook Hardware: Drivers & Thermal Management
 # broadcom-wl for WiFi, facetimehd for camera, mbpfan for cooling
-RUN dnf5 -y --refresh install \
+RUN dnf5 -y install \
     broadcom-wl akmod-wl \
     akmod-facetimehd facetimehd-kmod-common \
     kernel-devel akmods wget git make gcc curl xz cpio \
