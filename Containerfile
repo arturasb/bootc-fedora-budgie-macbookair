@@ -16,21 +16,24 @@ RUN dnf5 -y --refresh install \
 
 # 4. MacBook Hardware: Drivers & Thermal Management
 # broadcom-wl for WiFi, facetimehd for camera, mbpfan for cooling
-RUN dnf5 -y --setopt=tsflags=noscripts install \
+RUN dnf5 -y install \
     broadcom-wl akmod-wl \
     akmod-facetimehd facetimehd-kmod-common \
     kernel-devel akmods wget git make gcc curl xz cpio
 
-# 4.1. Build Akmods for the specific kernel in the image
-RUN KERNEL_VERSION=$(rpm -q kernel-core --queryformat '%{VERSION}-%{RELEASE}.%{ARCH}') && \
-    echo "▸ Building modules for kernel: ${KERNEL_VERSION}" && \
-    # Create home for the build user and fix permissions
-    mkdir -p /var/cache/akmods && \
-    chown -R akmodsbuild:akmodsbuild /var/cache/akmods /home/akmodsbuild && \
-    # Run the builds
-    runuser -u akmodsbuild -- akmods --force --kernels "${KERNEL_VERSION}" --kmod facetimehd && \
-    runuser -u akmodsbuild -- akmods --force --kernels "${KERNEL_VERSION}" --kmod wl && \
-    dnf5 install -y /var/cache/akmods/wl/*.rpm /var/cache/akmods/facetimehd/*.rpm
+# 4.1. Create build user and dirs
+RUN useradd -m -s /bin/bash akmodsbuild || true && \
+    mkdir -p /var/cache/akmods /var/lib/akmods/build /var/cache/akmods/output && \
+    chown -R akmodsbuild:akmodsbuild /var/cache/akmods /var/lib/akmods /home/akmodsbuild
+
+# 4.2. Configure akmods to build-only (create fragment)
+RUN printf 'AKMODS_BUILD_DIR=/var/lib/akmods/build\nAKMODS_OUTPUT_DIR=/var/cache/akmods/output\nAKMODS_INSTALL=no\n' > /etc/akmods.conf
+
+# 4.3. Build akmods as unprivileged user and install resulting rpms with dnf
+RUN KVER="${KVER:-$(cat /KVER_FILE)}" && \
+    runuser -u akmodsbuild -- bash -lc "KERN_DIR=/lib/modules/${KVER}/build akmods --force --kernels ${KVER} --kmod facetimehd || true" && \
+    runuser -u akmodsbuild -- bash -lc "KERN_DIR=/lib/modules/${KVER}/build akmods --force --kernels ${KVER} --kmod wl || true" && \
+    dnf -y install /var/cache/akmods/wl/*.rpm /var/cache/akmods/facetimehd/*.rpm || true
 
 # 5. Extract FaceTimeHD Firmware from Apple BootCamp Driver
 RUN git clone --depth 1 "https://github.com/patjak/facetimehd-firmware.git" /tmp/facetimehd-firmware && \
