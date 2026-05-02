@@ -58,7 +58,7 @@ RUN dnf5 install -y \
 RUN dnf5 install -y intel-media-driver
 
 # 5.3. Now disable RPM Fusion repos
-dnf5 config-manager setopt 'rpmfusion-*.enabled=0'
+RUN dnf5 config-manager setopt 'rpmfusion-*.enabled=0'
 
 # 5.4. Installing packages
 RUN dnf5 install -y \
@@ -92,8 +92,8 @@ COPY macbook.conf /usr/lib/modules-load.d/macbook.conf
 COPY hid-apple.conf /usr/lib/modprobe.d/hid-apple.conf
 
 # 5.10. Make logind to ignore power button activation resulting to immediate poweroff
-RUN mkdir /etc/systemd/logind.conf.d/
-COPY 10-powerkey.conf /etc/systemd/logind.conf.d/10-powerkey.conf
+# RUN mkdir /etc/systemd/logind.conf.d/
+# COPY 10-powerkey.conf /etc/systemd/logind.conf.d/10-powerkey.conf
 
 # 6. System Configuration & Services
 # Load facetimehd module and enable critical hardware/GUI services
