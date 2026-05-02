@@ -19,7 +19,7 @@ RUN dnf5 -y --refresh install \
 RUN dnf5 -y --refresh install \
     broadcom-wl akmod-wl \
     akmod-facetimehd facetimehd-kmod-common \
-    kernel-devel akmods wget git make gcc curl xz cpio && \
+    kernel-devel akmods wget git make gcc curl xz cpio
 
 # 4.1. Build Akmods for the specific kernel in the image
 RUN KERNEL_VERSION=$(rpm -q kernel-core --queryformat '%{VERSION}-%{RELEASE}.%{ARCH}') && \
@@ -47,14 +47,14 @@ RUN echo "▸ Installing mbpfan v2.4.0 from source" && \
     rm -rf /tmp/mbpfan
 
 # 5.2 Installing codecs and media drivers
-RUN dnf5 install -y \
+RUN dnf5 install -y --allowerasing \
     gstreamer1-plugin-libav \
     gstreamer1-plugins-bad-free-extras \
     gstreamer1-plugins-bad-freeworld \
     gstreamer1-plugins-ugly \
     gstreamer1-vaapi \
     ffmpeg \
-    --allowerasing
+    
 RUN dnf5 install -y intel-media-driver
 
 # 5.3. Now disable RPM Fusion repos
@@ -71,7 +71,6 @@ RUN dnf5 install -y \
     usbutils \
     lm_sensors \
     powertop
-      --allowerasing
 
 # 5.5. Bootc Native Kernel Arguments & Modprobe
 RUN mkdir -p /usr/lib/bootc/kargs.d/ && \
