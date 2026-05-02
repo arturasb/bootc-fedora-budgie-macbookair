@@ -20,10 +20,15 @@ RUN dnf5 -y install \
     kernel-devel akmods wget git make gcc curl xz cpio \
     NetworkManager-wifi
 
-# 2.3. Create unprivileged build user and akmods dirs before any akmods runs
+# 2.2. Create unprivileged build user and akmods dirs before any akmods runs
 RUN useradd -m -s /bin/bash akmodsbuild && \
     mkdir -p /var/lib/akmods/build /var/cache/akmods/output && \
     chown -R akmodsbuild:akmodsbuild /var/lib/akmods /var/cache/akmods /home/akmodsbuild
+
+# 2.3. MacBook Hardware: only download drivers for later build
+RUN dnf5 -y install --downloadonly \
+    broadcom-wl akmod-wl \
+    akmod-facetimehd facetimehd-kmod-common
 
 # 2.4. Make akmods build-only (prevent it from trying to install modules)
 RUN printf 'AKMODS_BUILD_DIR=/var/lib/akmods/build\nAKMODS_OUTPUT_DIR=/var/cache/akmods/output\nAKMODS_INSTALL=no\n' > /etc/akmods.conf
