@@ -4,10 +4,6 @@ FROM quay.io/fedora-ostree-desktops/budgie-atomic:44
 # 1.1. Making /opt immutable
 RUN rm /opt && mkdir /opt
 
-# 1.2 Detect kernel NEVRA once
-ARG KVER
-RUN if [ -z "${KVER:-}" ]; then KVER="$(rpm -q --qf '%{VERSION}-%{RELEASE}.%{ARCH}' kernel-core)"; fi && echo "$KVER" > /KVER && cat /KVER
-
 # 2. Setup Repositories
 RUN dnf5 -y --refresh install \
     "https://mirrors.rpmfusion.org/free/fedora/rpmfusion-free-release-44.noarch.rpm" \
@@ -16,15 +12,10 @@ RUN dnf5 -y --refresh install \
     curl -L -o /etc/yum.repos.d/_copr_mulderje-facetimehd-kmod.repo \
     https://copr.fedorainfracloud.org/coprs/mulderje/facetimehd-kmod/repo/fedora-44/mulderje-facetimehd-kmod-fedora-44.repo
 
-# 2.1. Detect kernel NEVRA once
-ARG KVER
-RUN if [ -z "${KVER:-}" ]; then KVER="$(rpm -q --qf '%{VERSION}-%{RELEASE}.%{ARCH}' kernel-core)"; fi && echo "$KVER" > /KVER && cat /KVER
-
 # 2.2. Install base build/runtime deps BUT DO NOT install akmod-* packages from repos
-RUN KVER="$(cat /KVER)" && \
-    dnf5 -y --refresh install \
+RUN dnf5 -y --refresh install \
       gcc make perl dkms elfutils-libelf-devel \
-      "kernel-devel-${KVER}" "kernel-headers-${KVER}" \
+      kernel-devel kernel-headers \
       akmods wget git make gcc curl xz cpio \
       broadcom-wl || true
 
@@ -37,16 +28,13 @@ RUN useradd -m -s /bin/bash akmodsbuild && \
 RUN printf 'AKMODS_BUILD_DIR=/var/lib/akmods/build\nAKMODS_OUTPUT_DIR=/var/cache/akmods/output\nAKMODS_INSTALL=no\n' > /etc/akmods.conf
 
 # 2.5. Build facetimehd + wl as non-root (produces rpms under /var/cache/akmods/<kmod>/)
-RUN KVER="$(cat /KVER)" && \
-    runuser -u akmodsbuild -- bash -lc "KERN_DIR=/lib/modules/${KVER}/build akmods --force --kernels ${KVER} --kmod facetimehd || true" && \
-    runuser -u akmodsbuild -- bash -lc "KERN_DIR=/lib/modules/${KVER}/build akmods --force --kernels ${KVER} --kmod wl || true"
+RUN KERNEL_VERSION=$(rpm -q kernel-core --queryformat '%{VERSION}-%{RELEASE}.%{ARCH}') && \
+    runuser -u akmodsbuild -- akmods --force --kernels "${KERNEL_VERSION}" --kmod facetimehd && \
+    runuser -u akmodsbuild -- akmods --force --kernels "${KERNEL_VERSION}" --kmod wl
 
 # 2.6. Install the generated rpms but skip their %post scriptlets (they would try to run akmods)
 RUN rpm -Uvh --noscripts /var/cache/akmods/wl/*.rpm /var/cache/akmods/facetimehd/*.rpm || \
     dnf5 -y localinstall /var/cache/akmods/wl/*.rpm /var/cache/akmods/facetimehd/*.rpm || true
-
-# 2.7. Finalize: depmod & regenerate initramfs for target kernel
-RUN KVER="$(cat /KVER)" && depmod -a "${KVER}" && dracut --kver "${KVER}" --force || true
 
 # 5. Extract FaceTimeHD Firmware from Apple BootCamp Driver
 RUN git clone --depth 1 "https://github.com/patjak/facetimehd-firmware.git" /tmp/facetimehd-firmware && \
