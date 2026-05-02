@@ -1,5 +1,8 @@
-# 1. Base: Use official Fedora 44 bootc
-FROM quay.io/fedora/fedora-bootc:44
+# 1. Base: Use unofficial Fedora Ostree Desktop for Budgie Atomic 44 bootc 
+FROM quay.io/fedora-ostree-desktops/budgie-atomic:44
+
+# 1.1. Making /opt immutable
+RUN rm /opt && mkdir /opt
 
 RUN set -euo pipefail
 
@@ -11,27 +14,12 @@ RUN dnf5 -y --refresh install \
     curl -L -o /etc/yum.repos.d/_copr_mulderje-facetimehd-kmod.repo \
     https://copr.fedorainfracloud.org/coprs/mulderje/facetimehd-kmod/repo/fedora-44/mulderje-facetimehd-kmod-fedora-44.repo
 
-# 3. Install Budgie Desktop (Onyx) and Essential Tools
-# Includes WireGuard, Toolbox, and Silverblue-standard packages
-RUN dnf5 -y --setopt=install_weak_deps=True group install budgie-desktop && \
-    dnf5 -y --refresh install \
-    gnome-terminal nautilus gtklock polkit \
-    plymouth plymouth-system-theme plymouth-graphics-libs \
-    gnome-software gnome-software-rpm-ostree \
-    firewalld firewall-config \
-    flatpak distrobox \
-    wireguard-tools systemd-resolved nm-connection-editor \
-    glibc-all-langpacks intel-media-driver mc btop libva-utils zram zip unzip usbutils lm_sensors powertop ibus-gtk4 && \
-    dnf5 clean all
-
 # 4. MacBook Hardware: Drivers & Thermal Management
 # broadcom-wl for WiFi, facetimehd for camera, mbpfan for cooling
 RUN dnf5 -y --refresh install \
     broadcom-wl akmod-wl \
     akmod-facetimehd facetimehd-kmod-common \
-    kernel-devel akmods wget git make gcc curl xz cpio \
-    NetworkManager-wifi && \
-    dnf5 clean all
+    kernel-devel akmods wget git make gcc curl xz cpio && \
 
 # 4.1. Build Akmods for the specific kernel in the image
 RUN KERNEL_VERSION=$(rpm -q kernel-core --queryformat '%{VERSION}-%{RELEASE}.%{ARCH}') && \
@@ -58,57 +46,68 @@ RUN echo "▸ Installing mbpfan v2.4.0 from source" && \
     cd /  && \
     rm -rf /tmp/mbpfan
 
-# 5.2. Writable directories (bootc best practice)
-# See: https://bootc-dev.github.io/bootc/building/guidance.html
-RUN echo "▸ Setting up writable /opt and /usr/local" && \
-    rm -rvf /opt && mkdir -vp /var/opt && ln -vs /var/opt /opt && \
-    mkdir -vp /var/usrlocal && mv -v /usr/local/* /var/usrlocal/ 2>/dev/null || true && \
-    rm -rvf /usr/local && ln -vs /var/usrlocal /usr/local
+# 5.2 Installing codecs and media drivers
+RUN dnf5 install -y \
+    gstreamer1-plugin-libav \
+    gstreamer1-plugins-bad-free-extras \
+    gstreamer1-plugins-bad-freeworld \
+    gstreamer1-plugins-ugly \
+    gstreamer1-vaapi \
+    ffmpeg \
+    --allowerasing
+RUN dnf5 install -y intel-media-driver
 
+# 5.3. Now disable RPM Fusion repos
+dnf5 config-manager setopt 'rpmfusion-*.enabled=0'
 
-# 5.3 Bootc Native Kernel Arguments & Modprobe
+# 5.4. Installing packages
+RUN dnf5 install -y \
+    mc \
+    btop \
+    libva-utils \
+    zram \
+    zip \
+    unzip \
+    usbutils \
+    lm_sensors \
+    powertop
+      --allowerasing
+
+# 5.5. Bootc Native Kernel Arguments & Modprobe
 RUN mkdir -p /usr/lib/bootc/kargs.d/ && \
     echo 'kargs = ["acpi_osi=!Darwin", "acpi_osi=!Windows 2012", "rhgb", "quiet"]' > /usr/lib/bootc/kargs.d/10-macbook.toml && \
     mkdir -p /usr/lib/modprobe.d/ && \
     echo 'options snd_hda_intel power_save=1' > /usr/lib/modprobe.d/audio-power-save.conf
 
-# 5.4. Disable XHC1/LID0 ACPI wakeup sources (prevents spurious wakeups)
+# 5.6. Disable XHC1/LID0 ACPI wakeup sources (prevents spurious wakeups)
 COPY suspend-fix.service /usr/lib/systemd/system/suspend-fix.service
 
-# 5.5. Powertop optimizations to save battery
+# 5.7. Powertop optimizations to save battery
 COPY powertop.service /usr/lib/systemd/system/powertop.service
 
-# 5.6. Kernel modules: ensure coretemp + applesmc loaded at boot
+# 5.8. Kernel modules: ensure coretemp + applesmc loaded at boot
 COPY macbook.conf /usr/lib/modules-load.d/macbook.conf
 
-# 5.7. Ensure Plymouth is the default boot splash
-RUN plymouth-set-default-theme -R spinner
-
-# 5.8. MacBook keyboard: fn key behavior
+# 5.9. MacBook keyboard: fn key behavior
 COPY hid-apple.conf /usr/lib/modprobe.d/hid-apple.conf
 
-# 5.9. Make logind to ignore power button activation resulting to immediate poweroff
+# 5.10. Make logind to ignore power button activation resulting to immediate poweroff
 RUN mkdir /etc/systemd/logind.conf.d/
 COPY 10-powerkey.conf /etc/systemd/logind.conf.d/10-powerkey.conf
 
 # 6. System Configuration & Services
 # Load facetimehd module and enable critical hardware/GUI services
 RUN echo "facetimehd" > /etc/modules-load.d/facetimehd.conf && \
-    systemctl set-default graphical.target && \
-    systemctl enable firewalld NetworkManager.service mbpfan.service suspend-fix.service powertop.service zram-swap.service && \
-    systemctl --global enable pipewire.service wireplumber.service
+    systemctl enable mbpfan.service suspend-fix.service powertop.service zram-swap.service
 
 # 6.1. systemd-remount-fs: bootc manages root mount options via initrd, not fstab
 RUN systemctl mask systemd-remount-fs.service
-
-# 6.2. Creating required directories
-RUN echo "▸ Creating required directories" && \
-    mkdir -vp /var/roothome /data /var/home
 
 # 7. Regenerate Initramfs (CRITICAL)
 # This packs your new MacBook drivers into the boot image
 RUN kver="$(rpm -q kernel-core --queryformat '%{VERSION}-%{RELEASE}.%{ARCH}')" && \
     dracut -vf "/usr/lib/modules/${kver}/initramfs.img" "${kver}"
+
 
 RUN << CLEANUP
 
@@ -121,19 +120,13 @@ rm -rfv /var/cache/* \
         /var/cache/libdnf5/* \
         /var/lib/dnf \
         /var/usrlocal/share/applications/mimeinfo.cache \
-        /var/roothome/.*
 
-# 8.1. Declare /var dirs for bootc lint compliance ──
-echo "▸ Generating tmpfiles.d entries for /var dirs"
-find /var -mindepth 1 -maxdepth 4 -type d \
-  | grep -v '^/var/home' \
-  | sort \
-  | while read -r dir; do
-      mode=$(stat -c '%a' "${dir}")
-      user=$(stat -c '%u' "${dir}")
-      group=$(stat -c '%g' "${dir}")
-      echo "d ${dir} ${mode} ${user} ${group} - -"
-    done > /usr/lib/tmpfiles.d/bootc-var-dirs.conf
+# 8.1. Remove Fedora flatpak repo
+RUN flatpak remote-delete --system fedora || true && \
+  flatpak remote-delete --system fedora-testing || true
+# 8.2. Add Flathub flatpak repo to --user
+RUN flatpak remote-add --user --if-not-exists flathub https://dl.flathub.org/repo/flathub.flatpakrepo
+
 
 CLEANUP
 
