@@ -12,12 +12,13 @@ RUN dnf5 -y --refresh install \
     curl -L -o /etc/yum.repos.d/_copr_mulderje-facetimehd-kmod.repo \
     https://copr.fedorainfracloud.org/coprs/mulderje/facetimehd-kmod/repo/fedora-44/mulderje-facetimehd-kmod-fedora-44.repo
 
-# 2.2. Install base build/runtime deps BUT DO NOT install akmod-* packages from repos
+# 2.1 MacBook Hardware: Drivers & Thermal Management
+# broadcom-wl for WiFi, facetimehd for camera, mbpfan for cooling
 RUN dnf5 -y --refresh install \
-      gcc make perl dkms elfutils-libelf-devel \
-      kernel-devel kernel-headers \
-      akmods wget git make gcc curl xz cpio \
-      broadcom-wl || true
+    broadcom-wl akmod-wl \
+    akmod-facetimehd facetimehd-kmod-common \
+    kernel-devel akmods wget git make gcc curl xz cpio \
+    NetworkManager-wifi
 
 # 2.3. Create unprivileged build user and akmods dirs before any akmods runs
 RUN useradd -m -s /bin/bash akmodsbuild && \
@@ -125,7 +126,7 @@ RUN echo "▸ Final cleanup for bootc compliance" && \
         /var/tmp/* \
         /var/cache/libdnf5/* \
         /var/lib/dnf \
-        /var/usrlocal/share/applications/mimeinfo.cache \
+        /var/usrlocal/share/applications/mimeinfo.cache 
 
 # 8.1. Remove Fedora flatpak repo
 RUN flatpak remote-delete --system fedora || true && \
