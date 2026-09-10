@@ -15,9 +15,10 @@ RUN dnf5 -y --refresh install \
 # Includes WireGuard, Toolbox, and Silverblue-standard packages
 RUN dnf5 -y --setopt=install_weak_deps=True group install budgie-desktop && \
     dnf5 -y --refresh install \
-    gnome-terminal nautilus gtklock polkit \
+    gnome-terminal nautilus gtklock polkit upower ssdm \
     plymouth plymouth-system-theme plymouth-graphics-libs \
-    gnome-software gnome-software-rpm-ostree \
+    gnome-software gnome-software-rpm-ostree gnome-settings-daemon \
+    pipewire pipewire-pulseaudio wireplumber network-manager-applet fedora-release-budgie-atomic \
     firewalld firewall-config \
     flatpak distrobox \
     wireguard-tools systemd-resolved nm-connection-editor \
@@ -102,7 +103,13 @@ RUN echo "facetimehd" > /etc/modules-load.d/facetimehd.conf && \
 # 6.1. systemd-remount-fs: bootc manages root mount options via initrd, not fstab
 RUN systemctl mask systemd-remount-fs.service
 
-# 6.2. Creating required directories
+# 6.2. boot to GUI
+RUN systemctl set-default graphical.target
+
+# 6.3. Enable SDDM
+RUN systemctl enable sddm
+
+# 6.4. Creating required directories
 RUN echo "▸ Creating required directories" && \
     mkdir -vp /var/roothome /data /var/home
 
