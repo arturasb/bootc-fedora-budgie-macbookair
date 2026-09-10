@@ -15,7 +15,7 @@ RUN dnf5 -y --refresh install \
 # Includes WireGuard, Toolbox, and Silverblue-standard packages
 RUN dnf5 -y --setopt=install_weak_deps=True group install budgie-desktop && \
     dnf5 -y --refresh install \
-    gnome-terminal nautilus gtklock polkit upower ssdm \
+    gnome-terminal nautilus gtklock polkit upower sddm \
     plymouth plymouth-system-theme plymouth-graphics-libs \
     gnome-software gnome-software-rpm-ostree gnome-settings-daemon \
     pipewire pipewire-pulseaudio wireplumber network-manager-applet fedora-release-budgie-atomic \
