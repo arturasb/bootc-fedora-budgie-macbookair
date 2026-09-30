@@ -25,26 +25,31 @@ RUN dnf5 -y --setopt=install_weak_deps=True group install budgie-desktop && \
     dnf5 clean all
 
 # 4. MacBook Hardware: Drivers & Thermal Management
+# Pridėtas explicit branduolio atnaujinimas ir papildomi įrankiai (elfutils, bc) modulių pasirašymui/kompiliavimui
 RUN dnf5 -y --refresh install \
     broadcom-wl akmod-wl \
     akmod-facetimehd facetimehd-kmod-common \
-    kernel-devel akmods wget git make gcc curl xz cpio \
+    kernel kernel-core kernel-devel akmods wget git make gcc curl xz cpio \
+    elfutils-libelf-devel bc \
     NetworkManager-wifi && \
     dnf5 clean all
 
 # 4.1. Build Akmods for the specific kernel in the image
-RUN KERNEL_VERSION=$(rpm -q kernel-core --queryformat '%{VERSION}-%{RELEASE}.%{ARCH}') && \
-    echo "▸ Building modules for kernel: ${KERNEL_VERSION}" && \
+# Patobulintas skriptas, kuris automatiškai suranda tikslią įdiegtos kernel-devel versiją
+RUN KERNEL_VERSION=$(rpm -q kernel-devel --queryformat '%{VERSION}-%{RELEASE}.%{ARCH}\n' | head -n 1) && \
+    echo "▸ Building modules for kernel version: ${KERNEL_VERSION}" && \
     akmods --force --kernels "${KERNEL_VERSION}" --kmod facetimehd && \
-    akmods --force --kernels "${KERNEL_VERSION}" --kmod wl
+    akmods --force --kernels "${KERNEL_VERSION}" --kmod wl || \
+    (cat /var/cache/akmods/facetimehd/*.log /var/cache/akmods/wl/*.log 2>/dev/null && exit 1)
 
 # 5. Extract FaceTimeHD Firmware from Apple BootCamp Driver
-RUN git clone --depth 1 "https://github.com/patjak/facetimehd-firmware.git" /tmp/facetimehd-firmware && \
+# Ištaisyta nedidelė spausdinimo klaida rm -rf /tmp/tmp/... -> /tmp/...
+RUN git clone --depth 1 "https://github.com" /tmp/facetimehd-firmware && \
     cd /tmp/facetimehd-firmware && \
     make && \
     make install && \
     cd / && \
-    rm -rf /tmp/tmp/facetimehd-firmware
+    rm -rf /tmp/facetimehd-firmware
 
 # 5.1. Install mbpfan v2.4.0 from source (Kompiliuojame tiesiai į /usr)
 RUN echo "▸ Installing mbpfan v2.4.0 from source" && \
