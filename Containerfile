@@ -12,7 +12,6 @@ RUN dnf5 -y --refresh install \
     https://copr.fedorainfracloud.org/coprs/mulderje/facetimehd-kmod/repo/fedora-44/mulderje-facetimehd-kmod-fedora-44.repo
 
 # 3. Install Budgie Desktop (Onyx) and Essential Tools
-# Includes WireGuard, Toolbox, and Silverblue-standard packages
 RUN dnf5 -y --setopt=install_weak_deps=True group install budgie-desktop && \
     dnf5 -y --refresh install \
     gnome-terminal nautilus gtklock polkit upower sddm \
@@ -26,7 +25,6 @@ RUN dnf5 -y --setopt=install_weak_deps=True group install budgie-desktop && \
     dnf5 clean all
 
 # 4. MacBook Hardware: Drivers & Thermal Management
-# broadcom-wl for WiFi, facetimehd for camera, mbpfan for cooling
 RUN dnf5 -y --refresh install \
     broadcom-wl akmod-wl \
     akmod-facetimehd facetimehd-kmod-common \
@@ -46,26 +44,28 @@ RUN git clone --depth 1 "https://github.com/patjak/facetimehd-firmware.git" /tmp
     make && \
     make install && \
     cd / && \
-    rm -rf /tmp/facetimehd-firmware
+    rm -rf /tmp/tmp/facetimehd-firmware
 
-# 5.1. Install mbpfan v2.4.0 from source (missing in Fedora 44 repos) ──
+# 5.1. Install mbpfan v2.4.0 from source (Kompiliuojame tiesiai į /usr)
 RUN echo "▸ Installing mbpfan v2.4.0 from source" && \
     git clone --depth 1 --branch v2.4.0 https://github.com/linux-on-mac/mbpfan.git /tmp/mbpfan  && \
     cd /tmp/mbpfan && \
     make && \
+    # mbpfan Makefile pagal nutylėjimą diegia į /usr/sbin, o konfigūraciją į /etc, kas yra gerai
     make install && \
-    # Ensure service file is in the correct systemd directory
+    # Užtikriname, kad serviso failas būtų teisingoje systemd direktorijoje (/usr/lib, o ne /lib)
     cp -v mbpfan.service /usr/lib/systemd/system/mbpfan.service && \
     cd /  && \
     rm -rf /tmp/mbpfan
 
-# 5.2. Writable directories (bootc best practice)
-# See: https://bootc-dev.github.io/bootc/building/guidance.html
-RUN echo "▸ Setting up writable /opt and /usr/local" && \
-    # rm -rvf /opt && mkdir -vp /var/opt && ln -vs /var/opt /opt && \ # edited
-    mkdir -vp /var/usrlocal && mv -v /usr/local/* /var/usrlocal/ 2>/dev/null || true && \
-    rm -rvf /usr/local && ln -vs /var/usrlocal /usr/local
-
+# 5.2. Bootc geriausia praktika: Writable direktorijų valdymas per tmpfiles.d
+# Užuot keitę /usr/local struktūrą kompiliavimo metu, nurodome sistemai paruošti aplinką vykdymo metu.
+RUN mkdir -p /usr/lib/tmpfiles.d/ && \
+    echo "d /var/usrlocal 0755 root root - -" > /usr/lib/tmpfiles.d/macbook-local.conf && \
+    echo "d /var/roothome 0700 root root - -" >> /usr/lib/tmpfiles.d/macbook-local.conf && \
+    echo "d /var/data 0755 root root - -" >> /usr/lib/tmpfiles.d/macbook-local.conf && \
+    # Sukuriame simbolinę nuorodą iš šaknies į /var vykdymo laiko duomenims
+    ln -s /var/data /data
 
 # 5.3 Bootc Native Kernel Arguments & Modprobe
 RUN mkdir -p /usr/lib/bootc/kargs.d/ && \
@@ -73,53 +73,34 @@ RUN mkdir -p /usr/lib/bootc/kargs.d/ && \
     mkdir -p /usr/lib/modprobe.d/ && \
     echo 'options snd_hda_intel power_save=1' > /usr/lib/modprobe.d/audio-power-save.conf
 
-# 5.4. Disable XHC1/LID0 ACPI wakeup sources (prevents spurious wakeups)
+# 5.4. Pasirinktiniai servisai ir konfigūracijos
 COPY suspend-fix.service /usr/lib/systemd/system/suspend-fix.service
-
-# 5.5. Powertop optimizations to save battery
 COPY powertop.service /usr/lib/systemd/system/powertop.service
-
-# 5.6. Kernel modules: ensure coretemp + applesmc loaded at boot
 COPY macbook.conf /usr/lib/modules-load.d/macbook.conf
-
-# 5.7. Ensure Plymouth is the default boot splash
-RUN plymouth-set-default-theme -R spinner
-
-# 5.8. MacBook keyboard: fn key behavior
 COPY hid-apple.conf /usr/lib/modprobe.d/hid-apple.conf
 
-# 5.9. Make logind to ignore power button activation resulting to immediate poweroff
-RUN mkdir /etc/systemd/logind.conf.d/
-COPY 10-powerkey.conf /etc/systemd/logind.conf.d/10-powerkey.conf
+# 5.5. Užtikriname Plymouth temą
+RUN plymouth-set-default-theme -R spinner
+
+# 5.6. Logind konfigūracija
+RUN mkdir -p /usr/lib/systemd/logind.conf.d/
+COPY 10-powerkey.conf /usr/lib/systemd/logind.conf.d/10-powerkey.conf
 
 # 6. System Configuration & Services
-# Load facetimehd module and enable critical hardware/GUI services
-RUN echo "facetimehd" > /etc/modules-load.d/facetimehd.conf && \
+RUN echo "facetimehd" > /usr/lib/modules-load.d/facetimehd.conf && \
     systemctl set-default graphical.target && \
-    systemctl enable firewalld NetworkManager.service mbpfan.service suspend-fix.service powertop.service zram-swap.service && \
+    systemctl enable firewalld NetworkManager.service mbpfan.service suspend-fix.service powertop.service zram-swap.service sddm.service && \
     systemctl --global enable pipewire.service wireplumber.service
 
-# 6.1. systemd-remount-fs: bootc manages root mount options via initrd, not fstab
+# 6.1. Maskuojame nereikalingus servisus bootc aplinkai
 RUN systemctl mask systemd-remount-fs.service
 
-# 6.2. boot to GUI
-RUN systemctl set-default graphical.target
-
-# 6.3. Enable SDDM
-RUN systemctl enable sddm
-
-# 6.4. Creating required directories
-RUN echo "▸ Creating required directories" && \
-    mkdir -vp /var/roothome /data /var/home
-
-# 7. Regenerate Initramfs (CRITICAL)
-# This packs your new MacBook drivers into the boot image
+# 7. Regenerate Initramfs
 RUN kver="$(rpm -q kernel-core --queryformat '%{VERSION}-%{RELEASE}.%{ARCH}')" && \
     dracut -vf "/usr/lib/modules/${kver}/initramfs.img" "${kver}"
 
-RUN << CLEANUP
-
-# 8. Final cleanup
+# 8. Final cleanup ir tmpfiles.d generavimas
+RUN <<CLEANUP
 echo "▸ Final cleanup for bootc compliance"
 dnf5 clean all
 rm -rfv /boot/*
@@ -129,22 +110,7 @@ rm -rfv /var/cache/* \
         /var/log/* \
         /var/tmp/* \
         /var/cache/libdnf5/* \
-        /var/lib/dnf \
-        /var/usrlocal/share/applications/mimeinfo.cache \
-        /var/roothome/.*
-
-# 8.1. Declare /var dirs for bootc lint compliance ──
-echo "▸ Generating tmpfiles.d entries for /var dirs"
-find /var -mindepth 1 -maxdepth 4 -type d \
-  | grep -v '^/var/home' \
-  | sort \
-  | while read -r dir; do
-      mode=$(stat -c '%a' "${dir}")
-      user=$(stat -c '%u' "${dir}")
-      group=$(stat -c '%g' "${dir}")
-      echo "d ${dir} ${mode} ${user} ${group} - -"
-    done > /usr/lib/tmpfiles.d/bootc-var-dirs.conf
-
+        /var/lib/dnf
 CLEANUP
 
 # 9. Lint the final image
