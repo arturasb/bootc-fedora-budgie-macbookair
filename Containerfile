@@ -87,7 +87,8 @@ COPY hid-apple.conf /usr/lib/modprobe.d/hid-apple.conf
 # 5.5. Užtikriname Plymouth temą
 # Sukuriame laikiną dracut taisyklę, kad išvengtume /root klaidos
 RUN mkdir -p /etc/dracut.conf.d/ && \
-    echo 'omit_drivers+=" /root /var/roothome "' > /etc/dracut.conf.d/bootc-fix.conf && \
+    echo 'hostonly="no"' > /etc/dracut.conf.d/bootc-nofail.conf && \
+    echo 'omit_dracutmodules+=" cifs fstab nfs network resume "' >> /etc/dracut.conf.d/bootc-nofail.conf && \
     plymouth-set-default-theme -R spinner
 
 # 5.6. Logind konfigūracija
@@ -106,8 +107,9 @@ RUN systemctl mask systemd-remount-fs.service
 # 7. Regenerate Initramfs
 # Naudojame tą pačią laikiną taisyklę, o po sėkmingo sugeneravimo ją pašaliname
 RUN kver="$(rpm -q kernel-core --queryformat '%{VERSION}-%{RELEASE}.%{ARCH}')" && \
-    dracut -vf "/usr/lib/modules/${kver}/initramfs.img" "${kver}" && \
-    rm -f /etc/dracut.conf.d/bootc-fix.conf
+    dracut -vf --no-hostonly "/usr/lib/modules/${kver}/initramfs.img" "${kver}" && \
+    # Pašaliname laikiną dracut failą prieš pabaigą
+    rm -f /etc/dracut.conf.d/bootc-nofail.conf
 
 # 8. Final cleanup ir tmpfiles.d generavimas
 RUN <<CLEANUP
