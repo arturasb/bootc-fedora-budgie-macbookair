@@ -86,10 +86,7 @@ COPY hid-apple.conf /usr/lib/modprobe.d/hid-apple.conf
 
 # 5.5. Užtikriname Plymouth temą
 # Sukuriame laikiną dracut taisyklę, kad išvengtume /root klaidos
-RUN rm -f /root && mkdir -p /root && \
-    mkdir -p /etc/dracut.conf.d/ && \
-    echo 'omit_dracutmodules+=" rootfs-block cifs fstab nfs network resume clevis-pin-tang nvmf "' > /etc/dracut.conf.d/bootc-nofail.conf && \
-    plymouth-set-default-theme -R spinner
+RUN plymouth-set-default-theme spinner
 
 # 5.6. Logind konfigūracija
 RUN mkdir -p /usr/lib/systemd/logind.conf.d/
@@ -107,12 +104,7 @@ RUN systemctl mask systemd-remount-fs.service
 # 7. Regenerate Initramfs
 # Naudojame tą pačią laikiną taisyklę, o po sėkmingo sugeneravimo ją pašaliname
 RUN kver="$(rpm -q kernel-core --queryformat '%{VERSION}-%{RELEASE}.%{ARCH}')" && \
-    dracut -vf --no-hostonly -o "rootfs-block cifs fstab nfs network resume clevis-pin-tang nvmf" "/usr/lib/modules/${kver}/initramfs.img" "${kver}" && \
-    # Išvalome laikiną konfigūraciją
-    rm -f /etc/dracut.conf.d/bootc-nofail.conf && \
-    # Svarbu: Gražiname bootc reikalaujamą /root struktūrą
-    rm -rf /root && \
-    ln -s /var/roothome /root
+    dracut -vf --no-hostonly -o "rootfs-block cifs fstab nfs network resume clevis-pin-tang nvmf" "/usr/lib/modules/${kver}/initramfs.img" "${kver}"
 
 # 8. Final cleanup ir tmpfiles.d generavimas
 RUN <<CLEANUP
