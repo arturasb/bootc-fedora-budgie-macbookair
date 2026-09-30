@@ -44,7 +44,7 @@ RUN KERNEL_VERSION=$(rpm -q kernel-devel --queryformat '%{VERSION}-%{RELEASE}.%{
 
 # 5. Extract FaceTimeHD Firmware from Apple BootCamp Driver
 # Ištaisyta nedidelė spausdinimo klaida rm -rf /tmp/tmp/... -> /tmp/...
-RUN git clone --depth 1 "https://github.com" /tmp/facetimehd-firmware && \
+RUN git clone --depth 1 "https://github.com/patjak/facetimehd-firmware.git" /tmp/facetimehd-firmware && \
     cd /tmp/facetimehd-firmware && \
     make && \
     make install && \
