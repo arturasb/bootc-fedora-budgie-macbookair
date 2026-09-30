@@ -63,7 +63,7 @@ RUN echo "▸ Installing mbpfan v2.4.0 from source" && \
 # 5.2. Writable directories (bootc best practice)
 # See: https://bootc-dev.github.io/bootc/building/guidance.html
 RUN echo "▸ Setting up writable /opt and /usr/local" && \
-    rm -rvf /opt && mkdir -vp /var/opt && ln -vs /var/opt /opt && \
+    # rm -rvf /opt && mkdir -vp /var/opt && ln -vs /var/opt /opt && \ # edited
     mkdir -vp /var/usrlocal && mv -v /usr/local/* /var/usrlocal/ 2>/dev/null || true && \
     rm -rvf /usr/local && ln -vs /var/usrlocal /usr/local
 
@@ -123,7 +123,8 @@ RUN << CLEANUP
 # 8. Final cleanup
 echo "▸ Final cleanup for bootc compliance"
 dnf5 clean all
-rm -rfv /var/cache/* \
+rm -rfv /boot/* \ # edited
+        /var/cache/* \
         /var/log/* \
         /var/tmp/* \
         /var/cache/libdnf5/* \
