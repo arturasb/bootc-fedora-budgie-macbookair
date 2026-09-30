@@ -53,7 +53,7 @@ RUN echo "▸ Installing mbpfan v2.4.0 from source" && \
     git clone --depth 1 --branch v2.4.0 https://github.com/linux-on-mac/mbpfan.git /tmp/mbpfan  && \
     cd /tmp/mbpfan && \
     make && \
-    make install
+    make install && \
 
     # Ensure service file is in the correct systemd directory
     cp -v mbpfan.service /usr/lib/systemd/system/mbpfan.service && \
