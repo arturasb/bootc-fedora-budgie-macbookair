@@ -54,7 +54,6 @@ RUN echo "▸ Installing mbpfan v2.4.0 from source" && \
     cd /tmp/mbpfan && \
     make && \
     make install && \
-
     # Ensure service file is in the correct systemd directory
     cp -v mbpfan.service /usr/lib/systemd/system/mbpfan.service && \
     cd /  && \
@@ -123,8 +122,10 @@ RUN << CLEANUP
 # 8. Final cleanup
 echo "▸ Final cleanup for bootc compliance"
 dnf5 clean all
-rm -rfv /boot/* \ # edited
-        /var/cache/* \
+rm -rfv /boot/*
+rm -rfv /run/* /run/.[!.]*
+rm -rfv /tmp/* /tmp/.[!.]*
+rm -rfv /var/cache/* \
         /var/log/* \
         /var/tmp/* \
         /var/cache/libdnf5/* \
