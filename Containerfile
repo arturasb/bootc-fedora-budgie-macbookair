@@ -103,8 +103,8 @@ RUN systemctl mask systemd-remount-fs.service
 
 # 7. Regenerate Initramfs
 # Naudojame tą pačią laikiną taisyklę, o po sėkmingo sugeneravimo ją pašaliname
-RUN kver="$(rpm -q kernel-core --queryformat '%{VERSION}-%{RELEASE}.%{ARCH}')" && \
-    dracut -vf --no-hostonly -o "rootfs-block cifs fstab nfs network resume clevis-pin-tang nvmf" "/usr/lib/modules/${kver}/initramfs.img" "${kver}"
+# RUN kver="$(rpm -q kernel-core --queryformat '%{VERSION}-%{RELEASE}.%{ARCH}')" && \
+#    dracut -vf --no-hostonly -o "rootfs-block cifs fstab nfs network resume clevis-pin-tang nvmf" "/usr/lib/modules/${kver}/initramfs.img" "${kver}"
 
 # 8. Final cleanup ir tmpfiles.d generavimas
 RUN <<CLEANUP
