@@ -85,7 +85,10 @@ COPY macbook.conf /usr/lib/modules-load.d/macbook.conf
 COPY hid-apple.conf /usr/lib/modprobe.d/hid-apple.conf
 
 # 5.5. Užtikriname Plymouth temą
-RUN plymouth-set-default-theme -R spinner
+# Sukuriame laikiną dracut taisyklę, kad išvengtume /root klaidos
+RUN mkdir -p /etc/dracut.conf.d/ && \
+    echo 'omit_drivers+=" /root /var/roothome "' > /etc/dracut.conf.d/bootc-fix.conf && \
+    plymouth-set-default-theme -R spinner
 
 # 5.6. Logind konfigūracija
 RUN mkdir -p /usr/lib/systemd/logind.conf.d/
@@ -101,8 +104,10 @@ RUN echo "facetimehd" > /usr/lib/modules-load.d/facetimehd.conf && \
 RUN systemctl mask systemd-remount-fs.service
 
 # 7. Regenerate Initramfs
+# Naudojame tą pačią laikiną taisyklę, o po sėkmingo sugeneravimo ją pašaliname
 RUN kver="$(rpm -q kernel-core --queryformat '%{VERSION}-%{RELEASE}.%{ARCH}')" && \
-    dracut -vf "/usr/lib/modules/${kver}/initramfs.img" "${kver}"
+    dracut -vf "/usr/lib/modules/${kver}/initramfs.img" "${kver}" && \
+    rm -f /etc/dracut.conf.d/bootc-fix.conf
 
 # 8. Final cleanup ir tmpfiles.d generavimas
 RUN <<CLEANUP
